@@ -6,6 +6,7 @@ import styled from "styled-components/macro";
 
 import Button from "../components/Button";
 import Input from "../components/Input";
+import PageWrapper from "../components/PageWrapper";
 import StatusMsg from "../components/StatusMsg";
 
 const AUTHENTICATE_USER = gql`
@@ -28,7 +29,7 @@ const Login = () => {
   const navigate = useNavigate();
 
   const handleAuthentication = ({ authenticateUser }) => {
-    console.log(authenticateUser);
+    window.localStorage.setItem("user-token", authenticateUser.user.token);
     navigate("/products");
   };
 
@@ -47,15 +48,7 @@ const Login = () => {
   };
 
   return (
-    <div
-      css={`
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        height: 90vh;
-      `}
-    >
+    <PageWrapper>
       {loading && <StatusMsg>Authenticating User...</StatusMsg>}
       {errorMsg && <StatusMsg>{`${errorMsg}, please try again.`}</StatusMsg>}
       <div
@@ -82,7 +75,7 @@ const Login = () => {
         />
         <Button onClick={login}>LOG IN</Button>
       </div>
-    </div>
+    </PageWrapper>
   );
 };
 
