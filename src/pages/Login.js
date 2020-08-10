@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { gql, useMutation } from "@apollo/client";
+import { useNavigate } from "@reach/router";
 // eslint-disable-next-line no-unused-vars
 import styled from "styled-components/macro";
 
@@ -24,8 +25,11 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState(null);
 
+  const navigate = useNavigate();
+
   const handleAuthentication = ({ authenticateUser }) => {
     console.log(authenticateUser);
+    navigate("/products");
   };
 
   const handleError = (error) => {
