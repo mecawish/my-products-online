@@ -11,13 +11,18 @@ import {
   Slider,
   Slide,
 } from "pure-react-carousel";
+
 import "pure-react-carousel/dist/react-carousel.es.css";
 
 import Button from "../components/Button";
 
-const ProductCard = ({ data }) => {
-  const { name, subtitle, createdAt, description, previews } = data;
+const ProductCard = ({ product, onFileUpload, inputRef }) => {
+  const { name, subtitle, createdAt, description, previews } = product;
   const imageUrls = previews.nodes.map((node) => node.asset.styles[0].url);
+
+  const handleClick = (event) => {
+    inputRef.current.click();
+  };
 
   return (
     <div
@@ -136,7 +141,15 @@ const ProductCard = ({ data }) => {
           </div>
 
           <p>{description}</p>
-          <Button>Add New Image Preview</Button>
+          <Button onClick={handleClick}>Add Image Preview</Button>
+          <input
+            type="file"
+            ref={inputRef}
+            onChange={onFileUpload}
+            css={`
+              display: none;
+            `}
+          />
         </div>
       </div>
     </div>
