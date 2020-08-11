@@ -1,5 +1,6 @@
 import React from "react";
 import { useQuery, gql } from "@apollo/client";
+import { useNavigate } from "@reach/router";
 // eslint-disable-next-line no-unused-vars
 import styled from "styled-components/macro";
 
@@ -33,6 +34,7 @@ const GET_PRODUCTS = gql`
 `;
 
 const Products = () => {
+  const navigate = useNavigate();
   const { loading, error, data } = useQuery(GET_PRODUCTS);
 
   if (loading) {
@@ -58,7 +60,11 @@ const Products = () => {
         `}
       >
         {data.viewer.customer.allProducts.nodes.map((product) => (
-          <ProductPreview key={product.id} product={product} />
+          <ProductPreview
+            key={product.id}
+            product={product}
+            onClick={() => navigate(`product/${product.id}`)}
+          />
         ))}
       </div>
     </PageWrapper>

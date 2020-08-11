@@ -2,9 +2,10 @@ import React from "react";
 // eslint-disable-next-line no-unused-vars
 import styled from "styled-components/macro";
 
-const ProductPreview = ({ product }) => {
+const ProductPreview = ({ product, onClick }) => {
   return (
     <div
+      onClick={onClick}
       css={`
         position: relative;
         display: flex;
@@ -18,6 +19,11 @@ const ProductPreview = ({ product }) => {
           0 2px 10px 0 rgba(0, 0, 0, 0.12);
 
         cursor: pointer;
+
+        &:hover {
+          box-shadow: 0 2px 5px 0 rgba(	255, 80, 96, 0.8),
+          0 2px 10px 0 rgba(	255, 80, 96, 0.5);
+        }
       `}
     >
       <div
@@ -25,6 +31,8 @@ const ProductPreview = ({ product }) => {
           position: absolute;
           bottom: 16px;
           left: 24px;
+          color: #ff5060;
+          font-weight: bold;
         `}
       >
         {product.name}

@@ -4,9 +4,9 @@ import { Router } from "@reach/router";
 import styled from "styled-components/macro";
 
 import Login from "./pages/Login";
+import Product from "./pages/Product";
 import Products from "./pages/Products";
 import PageHeader from "./components/PageHeader";
-
 
 function App() {
   return (
@@ -25,6 +25,7 @@ function App() {
         <Router>
           <Login path="/" />
           <Products path="products" />
+          <Product path="product/:productId" />
         </Router>
       </div>
     </>
