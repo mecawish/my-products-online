@@ -1,6 +1,7 @@
 import React from "react";
 import { useQuery, gql } from "@apollo/client";
 import { useNavigate } from "@reach/router";
+import { Waypoint } from "react-waypoint";
 // eslint-disable-next-line no-unused-vars
 import styled from "styled-components/macro";
 
@@ -9,10 +10,12 @@ import PageWrapper from "../components/PageWrapper";
 import StatusMsg from "../components/StatusMsg";
 
 const GET_PRODUCTS = gql`
-  query getProducts {
+  query getProducts($cursor: String) {
     viewer {
+      id
       customer {
-        allProducts {
+        id
+        allProducts(first: 12, after: $cursor) {
           nodes {
             id
             name
@@ -27,6 +30,10 @@ const GET_PRODUCTS = gql`
               }
             }
           }
+          pageInfo {
+            endCursor
+            hasNextPage
+          }
         }
       }
     }
@@ -35,7 +42,38 @@ const GET_PRODUCTS = gql`
 
 const Products = () => {
   const navigate = useNavigate();
-  const { loading, error, data } = useQuery(GET_PRODUCTS);
+  const { loading, error, data, fetchMore } = useQuery(GET_PRODUCTS);
+
+  const fetchMoreProducts = () => {
+    data.viewer.customer.allProducts.pageInfo.hasNextPage &&
+      fetchMore({
+        variables: {
+          cursor: data.viewer.customer.allProducts.pageInfo.endCursor,
+        },
+        updateQuery: (prevResult, { fetchMoreResult }) => {
+          const newProducts = fetchMoreResult.viewer.customer.allProducts.nodes;
+          const pageInfo = fetchMoreResult.viewer.customer.allProducts.pageInfo;
+
+          return {
+            ...prevResult,
+            viewer: {
+              ...prevResult.viewer,
+              customer: {
+                ...prevResult.viewer.customer,
+                allProducts: {
+                  ...prevResult.viewer.customer.allProducts,
+                  nodes: [
+                    ...prevResult.viewer.customer.allProducts.nodes,
+                    ...newProducts,
+                  ],
+                  pageInfo,
+                },
+              },
+            },
+          };
+        },
+      });
+  };
 
   if (loading) {
     return <StatusMsg>Loading...</StatusMsg>;
@@ -66,6 +104,7 @@ const Products = () => {
             onClick={() => navigate(`product/${product.id}`)}
           />
         ))}
+        <Waypoint onEnter={fetchMoreProducts} />
       </div>
     </PageWrapper>
   );
