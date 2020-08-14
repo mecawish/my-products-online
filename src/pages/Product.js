@@ -1,6 +1,7 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { gql, useQuery, useMutation } from "@apollo/client";
 
+import client from "../client";
 import PageWrapper from "../components/PageWrapper";
 import ProductCard from "../components/ProductCard";
 import StatusMsg from "../components/StatusMsg";
@@ -14,15 +15,41 @@ const GET_PRODUCT_INFO = gql`
         subtitle
         createdAt
         description
+      }
+    }
+  }
+`;
+
+const GET_PRODUCT_PREVIEWS = gql`
+  query getProductPreviews($id: ID!) {
+    node(id: $id) {
+      ... on Product {
+        id
         previews {
           nodes {
             id
-            title
             asset {
+              id
               styles {
                 url
               }
             }
+          }
+        }
+      }
+    }
+  }
+`;
+
+const CREATE_PREVIEW = gql`
+  mutation CreatePreview($input: CreatePreviewInput!) {
+    createPreview(input: $input) {
+      node {
+        id
+        asset {
+          id
+          styles {
+            url
           }
         }
       }
@@ -51,7 +78,24 @@ const CREATE_SHARED_ASSET = gql`
   }
 `;
 
+const JOB_UPDATES = gql`
+  subscription onJobUpdates($jid: ID!) {
+    jobUpdates(jid: $jid) {
+      jid
+      node {
+        ... on SharedAsset {
+          id
+          styles {
+            url
+          }
+        }
+      }
+    }
+  }
+`;
+
 const Product = ({ productId }) => {
+  const [jid, setJid] = useState(null);
   const hiddenFileInput = useRef(null);
 
   const uploadImage = ({ generateS3PresignedUrl }) => {
@@ -86,10 +130,18 @@ const Product = ({ productId }) => {
   };
 
   const handleCreatedAsset = ({ createSharedAsset }) => {
-    console.log(createSharedAsset);
+    setJid(createSharedAsset.jid);
   };
 
   const { loading, error, data } = useQuery(GET_PRODUCT_INFO, {
+    variables: { id: productId },
+  });
+
+  const {
+    loading: loadingPreviews,
+    error: previewsError,
+    data: previews,
+  } = useQuery(GET_PRODUCT_PREVIEWS, {
     variables: { id: productId },
   });
 
@@ -101,13 +153,53 @@ const Product = ({ productId }) => {
     onCompleted: handleCreatedAsset,
   });
 
-  if (loading) {
-    return <StatusMsg>Loading...</StatusMsg>;
-  }
+  const [createPreview] = useMutation(CREATE_PREVIEW, {
+    update(
+      cache,
+      {
+        data: {
+          createPreview: { node },
+        },
+      }
+    ) {
+      const product = cache.readQuery({
+        query: GET_PRODUCT_PREVIEWS,
+        variables: { id: productId },
+      });
 
-  if (error) {
-    return <StatusMsg>Error fetching product info</StatusMsg>;
-  }
+      cache.writeQuery({
+        query: GET_PRODUCT_PREVIEWS,
+        variables: { id: productId },
+        data: {
+          ...product,
+          node: {
+            ...product.node,
+            previews: {
+              ...product.node.previews,
+              nodes: [...product.node.previews.nodes, node],
+            },
+          },
+        },
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (jid) {
+      client.subscribe({ query: JOB_UPDATES, variables: { jid } }).subscribe({
+        next(data) {
+          createPreview({
+            variables: {
+              input: {
+                previewableId: productId,
+                assetId: data.data.jobUpdates.node.id,
+              },
+            },
+          });
+        },
+      });
+    }
+  }, [createPreview, jid, productId]);
 
   const onFileUpload = (e) => {
     generatePresignedUrl({
@@ -117,10 +209,19 @@ const Product = ({ productId }) => {
     });
   };
 
+  if (loading || loadingPreviews) {
+    return <StatusMsg>Loading...</StatusMsg>;
+  }
+
+  if (error || previewsError) {
+    return <StatusMsg>Error fetching product info</StatusMsg>;
+  }
+
   return (
     <PageWrapper>
       <ProductCard
         product={data.node}
+        previews={previews.node.previews}
         onFileUpload={onFileUpload}
         inputRef={hiddenFileInput}
       />

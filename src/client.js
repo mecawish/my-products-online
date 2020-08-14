@@ -1,12 +1,19 @@
-import { ApolloClient, InMemoryCache, createHttpLink } from "@apollo/client";
-import { setContext } from '@apollo/client/link/context';
+import {
+  ApolloClient,
+  InMemoryCache,
+  createHttpLink,
+  split,
+} from "@apollo/client";
+import { setContext } from "@apollo/client/link/context";
+import ActionCable from "actioncable";
+import { ActionCableLink } from "graphql-ruby-client";
 
 const httpLink = createHttpLink({
   uri: "https://staging-api.sayduck.io/graphql",
 });
 
 const authLink = setContext((_, { headers }) => {
-  const token = localStorage.getItem('user-token');
+  const token = localStorage.getItem("user-token");
   return {
     headers: {
       ...headers,
@@ -15,8 +22,23 @@ const authLink = setContext((_, { headers }) => {
   };
 });
 
+const cable = ActionCable.createConsumer("wss://staging-api.sayduck.io/cable");
+
+const hasSubscriptionOperation = ({ query: { definitions } }) => {
+  return definitions.some(
+    ({ kind, operation }) =>
+      kind === "OperationDefinition" && operation === "subscription"
+  );
+};
+
+const link = split(
+  hasSubscriptionOperation,
+  new ActionCableLink({ cable }),
+  authLink.concat(httpLink)
+);
+
 const client = new ApolloClient({
-  link: authLink.concat(httpLink),
+  link: link,
   cache: new InMemoryCache(),
 });
 

@@ -11,16 +11,15 @@ import {
   Slider,
   Slide,
 } from "pure-react-carousel";
-
 import "pure-react-carousel/dist/react-carousel.es.css";
 
 import Button from "../components/Button";
 
-const ProductCard = ({ product, onFileUpload, inputRef }) => {
-  const { name, subtitle, createdAt, description, previews } = product;
+const ProductCard = ({ product, previews, onFileUpload, inputRef }) => {
+  const { name, subtitle, createdAt, description } = product;
   const imageUrls = previews.nodes.map((node) => node.asset.styles[0].url);
 
-  const handleClick = (event) => {
+  const handleClick = () => {
     inputRef.current.click();
   };
 

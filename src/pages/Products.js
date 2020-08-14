@@ -16,7 +16,7 @@ const GET_PRODUCTS = gql`
           nodes {
             id
             name
-            previews {
+            previews(first: 1) {
               nodes {
                 id
                 asset {
