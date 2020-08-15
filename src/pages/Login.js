@@ -6,6 +6,7 @@ import styled from "styled-components/macro";
 
 import Button from "../components/Button";
 import Input from "../components/Input";
+import LoginForm from "../components/LoginForm";
 import PageWrapper from "../components/PageWrapper";
 import StatusMsg from "../components/StatusMsg";
 
@@ -51,16 +52,7 @@ const Login = () => {
     <PageWrapper>
       {loading && <StatusMsg>Authenticating User...</StatusMsg>}
       {errorMsg && <StatusMsg>{`${errorMsg}, please try again.`}</StatusMsg>}
-      <div
-        css={`
-          width: 400px;
-          padding: 30px;
-          border-radius: 10px;
-          background-color: #ff5060;
-          box-shadow: 5px 10px 10px rgba(2, 128, 144, 0.4);
-          text-align: center;
-        `}
-      >
+      <LoginForm>
         <Input
           type="email"
           placeholder="Email"
@@ -74,7 +66,7 @@ const Login = () => {
           onChange={(e) => setPassword(e.target.value)}
         />
         <Button onClick={login}>LOG IN</Button>
-      </div>
+      </LoginForm>
     </PageWrapper>
   );
 };

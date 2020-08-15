@@ -5,7 +5,6 @@ import {
   split,
 } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
-import { relayStylePagination } from "@apollo/client/utilities";
 import ActionCable from "actioncable";
 import { ActionCableLink } from "graphql-ruby-client";
 
@@ -40,7 +39,7 @@ const link = split(
 
 const client = new ApolloClient({
   link: link,
-  cache: new InMemoryCache()
+  cache: new InMemoryCache(),
 });
 
 export default client;

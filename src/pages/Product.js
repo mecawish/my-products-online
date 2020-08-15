@@ -1,8 +1,9 @@
 import React, { useRef, useState, useEffect } from "react";
 import { gql, useQuery, useMutation } from "@apollo/client";
+// eslint-disable-next-line no-unused-vars
+import styled from "styled-components/macro";
 
 import client from "../client";
-import PageWrapper from "../components/PageWrapper";
 import ProductCard from "../components/ProductCard";
 import StatusMsg from "../components/StatusMsg";
 
@@ -41,22 +42,6 @@ const GET_PRODUCT_PREVIEWS = gql`
   }
 `;
 
-const CREATE_PREVIEW = gql`
-  mutation CreatePreview($input: CreatePreviewInput!) {
-    createPreview(input: $input) {
-      node {
-        id
-        asset {
-          id
-          styles {
-            url
-          }
-        }
-      }
-    }
-  }
-`;
-
 const GENERATE_S3_PRESIGNED_URL = gql`
   mutation GenerateS3PresignedUrl($input: GenerateS3PresignedUrlInput!) {
     generateS3PresignedUrl(input: $input) {
@@ -78,7 +63,23 @@ const CREATE_SHARED_ASSET = gql`
   }
 `;
 
-const JOB_UPDATES = gql`
+const CREATE_PREVIEW = gql`
+  mutation CreatePreview($input: CreatePreviewInput!) {
+    createPreview(input: $input) {
+      node {
+        id
+        asset {
+          id
+          styles {
+            url
+          }
+        }
+      }
+    }
+  }
+`;
+
+const ON_JOB_UPDATES = gql`
   subscription onJobUpdates($jid: ID!) {
     jobUpdates(jid: $jid) {
       jid
@@ -96,7 +97,21 @@ const JOB_UPDATES = gql`
 
 const Product = ({ productId }) => {
   const [jid, setJid] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
   const hiddenFileInput = useRef(null);
+
+  const handleError = (error) => {
+    setErrorMsg(error.message);
+    setTimeout(() => setErrorMsg(null), 5000);
+  };
+
+  const onFileUpload = (e) => {
+    generatePresignedUrl({
+      variables: {
+        input: { metadata: { contentType: e.target.files[0].type, md5: "" } },
+      },
+    });
+  };
 
   const uploadImage = ({ generateS3PresignedUrl }) => {
     const body = new FormData();
@@ -133,27 +148,18 @@ const Product = ({ productId }) => {
     setJid(createSharedAsset.jid);
   };
 
-  const { loading, error, data } = useQuery(GET_PRODUCT_INFO, {
-    variables: { id: productId },
-  });
-
-  const {
-    loading: loadingPreviews,
-    error: previewsError,
-    data: previews,
-  } = useQuery(GET_PRODUCT_PREVIEWS, {
-    variables: { id: productId },
-  });
-
   const [generatePresignedUrl] = useMutation(GENERATE_S3_PRESIGNED_URL, {
     onCompleted: uploadImage,
+    onError: handleError,
   });
 
   const [createSharedAsset] = useMutation(CREATE_SHARED_ASSET, {
     onCompleted: handleCreatedAsset,
+    onError: handleError,
   });
 
   const [createPreview] = useMutation(CREATE_PREVIEW, {
+    onError: handleError,
     update(
       cache,
       {
@@ -186,28 +192,34 @@ const Product = ({ productId }) => {
 
   useEffect(() => {
     if (jid) {
-      client.subscribe({ query: JOB_UPDATES, variables: { jid } }).subscribe({
-        next(data) {
-          createPreview({
-            variables: {
-              input: {
-                previewableId: productId,
-                assetId: data.data.jobUpdates.node.id,
+      client
+        .subscribe({ query: ON_JOB_UPDATES, variables: { jid } })
+        .subscribe({
+          next(data) {
+            createPreview({
+              variables: {
+                input: {
+                  previewableId: productId,
+                  assetId: data.data.jobUpdates.node.id,
+                },
               },
-            },
-          });
-        },
-      });
+            });
+          },
+        });
     }
   }, [createPreview, jid, productId]);
 
-  const onFileUpload = (e) => {
-    generatePresignedUrl({
-      variables: {
-        input: { metadata: { contentType: e.target.files[0].type, md5: "" } },
-      },
-    });
-  };
+  const { loading, error, data } = useQuery(GET_PRODUCT_INFO, {
+    variables: { id: productId },
+  });
+
+  const {
+    loading: loadingPreviews,
+    error: previewsError,
+    data: previews,
+  } = useQuery(GET_PRODUCT_PREVIEWS, {
+    variables: { id: productId },
+  });
 
   if (loading || loadingPreviews) {
     return <StatusMsg>Loading...</StatusMsg>;
@@ -218,14 +230,20 @@ const Product = ({ productId }) => {
   }
 
   return (
-    <PageWrapper>
+    <div
+      css={`
+        margin: 100px auto;
+        width: fit-content;
+      `}
+    >
+      {errorMsg && <StatusMsg>{`ERROR: ${errorMsg}`}</StatusMsg>}
       <ProductCard
         product={data.node}
         previews={previews.node.previews}
         onFileUpload={onFileUpload}
         inputRef={hiddenFileInput}
       />
-    </PageWrapper>
+    </div>
   );
 };
 
