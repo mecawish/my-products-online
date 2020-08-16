@@ -1,8 +1,10 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useContext } from "react";
 import { gql, useQuery, useMutation } from "@apollo/client";
+import { Redirect } from "@reach/router";
 // eslint-disable-next-line no-unused-vars
 import styled from "styled-components/macro";
 
+import { authContext } from "../authContext";
 import client from "../client";
 import ProductCard from "../components/ProductCard";
 import StatusMsg from "../components/StatusMsg";
@@ -99,6 +101,10 @@ const Product = ({ productId }) => {
   const [jid, setJid] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const hiddenFileInput = useRef(null);
+
+  const {
+    auth: { userToken, isLoadingToken },
+  } = useContext(authContext);
 
   const handleError = (error) => {
     setErrorMsg(error.message);
@@ -221,8 +227,12 @@ const Product = ({ productId }) => {
     variables: { id: productId },
   });
 
+  if (!isLoadingToken && !userToken) {
+    return <Redirect to="/" noThrow />;
+  }
+
   if (loading || loadingPreviews) {
-    return <StatusMsg>Loading...</StatusMsg>;
+    return <StatusMsg>Loading Page...</StatusMsg>;
   }
 
   if (error || previewsError) {

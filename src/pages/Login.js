@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { gql, useMutation } from "@apollo/client";
-import { useNavigate } from "@reach/router";
-// eslint-disable-next-line no-unused-vars
-import styled from "styled-components/macro";
+import { navigate } from "@reach/router";
 
+import { authContext } from "../authContext";
 import Button from "../components/Button";
 import Input from "../components/Input";
 import LoginForm from "../components/LoginForm";
@@ -27,11 +26,14 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState(null);
 
-  const navigate = useNavigate();
+  const {
+    auth: { userToken },
+    setAuth,
+  } = useContext(authContext);
 
   const handleAuthentication = ({ authenticateUser }) => {
-    window.localStorage.setItem("user-token", authenticateUser.user.token);
-    navigate("/products");
+    setAuth({ userToken: authenticateUser.user.token });
+    navigate("products");
   };
 
   const handleError = (error) => {
@@ -47,6 +49,8 @@ const Login = () => {
     setErrorMsg(null);
     loginUser({ variables: { input: { email, password } } });
   };
+
+  if (userToken) navigate("products");
 
   return (
     <PageWrapper>

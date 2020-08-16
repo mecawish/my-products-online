@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useContext } from "react";
 import { useQuery, gql } from "@apollo/client";
-import { useNavigate } from "@reach/router";
+import { navigate, Redirect } from "@reach/router";
 import { Waypoint } from "react-waypoint";
 // eslint-disable-next-line no-unused-vars
 import styled from "styled-components/macro";
 
+import { authContext } from "../authContext";
 import ProductPreview from "../components/ProductPreview";
 import PageWrapper from "../components/PageWrapper";
 import StatusMsg from "../components/StatusMsg";
@@ -41,7 +42,10 @@ const GET_PRODUCTS = gql`
 `;
 
 const Products = () => {
-  const navigate = useNavigate();
+  const {
+    auth: { userToken, isLoadingToken },
+  } = useContext(authContext);
+
   const { loading, error, data, fetchMore } = useQuery(GET_PRODUCTS);
 
   const fetchMoreProducts = () => {
@@ -75,8 +79,12 @@ const Products = () => {
       });
   };
 
+  if (!isLoadingToken && !userToken) {
+    return <Redirect to="/" noThrow />;
+  }
+
   if (loading) {
-    return <StatusMsg>Loading...</StatusMsg>;
+    return <StatusMsg>Loading Page...</StatusMsg>;
   }
 
   if (error) {
