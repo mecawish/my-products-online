@@ -100,6 +100,7 @@ const ON_JOB_UPDATES = gql`
 const Product = ({ productId }) => {
   const [jid, setJid] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
   const hiddenFileInput = useRef(null);
 
   const {
@@ -112,6 +113,7 @@ const Product = ({ productId }) => {
   };
 
   const onFileUpload = (e) => {
+    setIsUploading(true);
     generatePresignedUrl({
       variables: {
         input: { metadata: { contentType: e.target.files[0].type, md5: "" } },
@@ -165,6 +167,7 @@ const Product = ({ productId }) => {
   });
 
   const [createPreview] = useMutation(CREATE_PREVIEW, {
+    onCompleted: () => setIsUploading(false),
     onError: handleError,
     update(
       cache,
@@ -252,6 +255,7 @@ const Product = ({ productId }) => {
         previews={previews.node.previews}
         onFileUpload={onFileUpload}
         inputRef={hiddenFileInput}
+        isUploading={isUploading}
       />
     </div>
   );

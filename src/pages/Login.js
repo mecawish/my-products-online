@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useRef } from "react";
 import { gql, useMutation } from "@apollo/client";
 import { navigate } from "@reach/router";
 
@@ -25,11 +25,19 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState(null);
+  const logInButton = useRef(null);
 
   const {
     auth: { userToken },
     setAuth,
   } = useContext(authContext);
+
+  const onKeyUp = (e) => {
+    // log in on Enter
+    if (e.keyCode === 13) {
+      logInButton.current.click();
+    }
+  };
 
   const handleAuthentication = ({ authenticateUser }) => {
     setAuth({ userToken: authenticateUser.user.token });
@@ -47,7 +55,16 @@ const Login = () => {
 
   const login = () => {
     setErrorMsg(null);
-    loginUser({ variables: { input: { email, password } } });
+
+    if (email === "") {
+      setErrorMsg("Email is required");
+    } else if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
+      setErrorMsg("Please enter a valid email address");
+    } else if (password === "") {
+      setErrorMsg("Password is required");
+    } else {
+      loginUser({ variables: { input: { email, password } } });
+    }
   };
 
   if (userToken) navigate("products");
@@ -68,8 +85,11 @@ const Login = () => {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onKeyUp={onKeyUp}
         />
-        <Button onClick={login}>LOG IN</Button>
+        <Button onClick={login} ref={logInButton}>
+          LOG IN
+        </Button>
       </LoginForm>
     </PageWrapper>
   );

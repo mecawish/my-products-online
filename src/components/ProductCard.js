@@ -3,6 +3,7 @@ import { Link } from "@reach/router";
 import styled from "styled-components/macro";
 import { format } from "date-fns";
 
+import { ReactComponent as Spinner } from "../spinner.svg";
 import Button from "../components/Button";
 
 const CardWrapper = styled.div`
@@ -93,7 +94,13 @@ const Title = styled.div`
   }
 `;
 
-const ProductCard = ({ product, previews, onFileUpload, inputRef }) => {
+const ProductCard = ({
+  product,
+  previews,
+  onFileUpload,
+  inputRef,
+  isUploading,
+}) => {
   const { name, subtitle, createdAt, description } = product;
   const imageUrls = previews.nodes.map((node) => node.asset.styles[0].url);
 
@@ -106,7 +113,7 @@ const ProductCard = ({ product, previews, onFileUpload, inputRef }) => {
       <StyledLink to="/products">BACK TO ALL PRODUCTS</StyledLink>
       <ProductInfo>
         <Previews>
-          {imageUrls.length === 0 ? (
+          {imageUrls.length === 0 && !isUploading ? (
             <ImageWrapper>NO AVAILABLE PREVIEW</ImageWrapper>
           ) : (
             imageUrls.map((url, i) => (
@@ -115,6 +122,7 @@ const ProductCard = ({ product, previews, onFileUpload, inputRef }) => {
               </ImageWrapper>
             ))
           )}
+          {isUploading && <Spinner />}
         </Previews>
         <ProductDetails>
           <Title>
@@ -128,6 +136,7 @@ const ProductCard = ({ product, previews, onFileUpload, inputRef }) => {
           <Button onClick={handleClick}>Add Image Preview</Button>
           <input
             type="file"
+            accept="image/*"
             ref={inputRef}
             onChange={onFileUpload}
             css={`
