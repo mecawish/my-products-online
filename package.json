@@ -9,6 +9,7 @@
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
     "actioncable": "^5.2.4-3",
+    "crypto-js": "^4.0.0",
     "date-fns": "^2.15.0",
     "graphql": "^15.3.0",
     "graphql-ruby-client": "^1.7.11",

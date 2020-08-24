@@ -122,7 +122,11 @@ const ProductCard = ({
               </ImageWrapper>
             ))
           )}
-          {isUploading && <Spinner />}
+          {isUploading && (
+            <ImageWrapper key="loading">
+              <Spinner />
+            </ImageWrapper>
+          )}
         </Previews>
         <ProductDetails>
           <Title>

@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, useContext } from "react";
 import { gql, useQuery, useMutation } from "@apollo/client";
 import { Redirect } from "@reach/router";
+import md5 from "crypto-js/md5";
 // eslint-disable-next-line no-unused-vars
 import styled from "styled-components/macro";
 
@@ -109,14 +110,18 @@ const Product = ({ productId }) => {
 
   const handleError = (error) => {
     setErrorMsg(error.message);
+    setIsUploading(false);
     setTimeout(() => setErrorMsg(null), 5000);
   };
 
   const onFileUpload = (e) => {
     setIsUploading(true);
+    const file = e.target.files[0];
+    const cryptoMD5 = md5(file).toString();
+
     generatePresignedUrl({
       variables: {
-        input: { metadata: { contentType: e.target.files[0].type, md5: "" } },
+        input: { metadata: { contentType: file.type, md5: cryptoMD5 } },
       },
     });
   };
